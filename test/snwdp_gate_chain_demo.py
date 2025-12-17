@@ -1,4 +1,4 @@
-# -*- coding: gbk -*-
+# -*- coding: utf-8 -*-
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
@@ -17,12 +17,12 @@ def build_chain_network(
     h0=5.0,
     z_down=0.0
 ):
-    # SJ0..SJ(2N)  ¹² 2N+1 ¸ö½Úµã
+    # SJ0..SJ(2N)  å…± 2N+1 ä¸ªèŠ‚ç‚¹
     n_sj = 2 * N_gates + 1
     sj_ids = np.arange(n_sj, dtype=int)
 
-    # µ×¸ß³Ì£ºreach£¨Å¼->Ææ£©ÓĞÆÂ½µ£¬gate£¨Ææ->Å¼£©Áã³¤¶È
-    drop = reach_len * bed_slope  # 0.8 m/¶Î
+    # åº•é«˜ç¨‹ï¼šreachï¼ˆå¶->å¥‡ï¼‰æœ‰å¡é™ï¼Œgateï¼ˆå¥‡->å¶ï¼‰é›¶é•¿åº¦
+    drop = reach_len * bed_slope  # 0.8 m/æ®µ
     z_inv = np.zeros(n_sj, dtype=float)
     z_inv[-1] = z_down
 
@@ -35,15 +35,15 @@ def build_chain_network(
         "name": [f"SJ{i}" for i in sj_ids],
         "z_inv": z_inv,
         "h_0": np.full(n_sj, h0),
-        "bc": np.array([False] * (n_sj - 1) + [True]),  # ½ö×îÏÂÓÎ±ß½ç
+        "bc": np.array([False] * (n_sj - 1) + [True]),  # ä»…æœ€ä¸‹æ¸¸è¾¹ç•Œ
         "storage": ["functional"] * n_sj,
         "a": np.zeros(n_sj),
         "b": np.zeros(n_sj),
-        "c": np.full(n_sj, channel_width * 300.0),  # µÈĞ§Ë®ÃæÃæ»ı£¨ÎÈÒ»µã£©
+        "c": np.full(n_sj, channel_width * 300.0),  # ç­‰æ•ˆæ°´é¢é¢ç§¯ï¼ˆç¨³ä¸€ç‚¹ï¼‰
         "max_depth": np.full(n_sj, 50.0)
     })
 
-    # 5¶ÎÇşµÀ£ºSJ(2k)->SJ(2k+1)
+    # 5æ®µæ¸ é“ï¼šSJ(2k)->SJ(2k+1)
     sl_ids = np.arange(N_gates, dtype=int)
     superlinks = pd.DataFrame({
         "id": sl_ids,
@@ -58,10 +58,10 @@ def build_chain_network(
         "dx": np.full(N_gates, reach_len),
         "n": np.full(N_gates, n_manning),
 
-        # Èç¹ûÄãÕâĞĞ±¨´í£¬°Ñ rect_open ¸Ä³É rect »ò rectangular ÔÙÊÔ
+        # å¦‚æœä½ è¿™è¡ŒæŠ¥é”™ï¼ŒæŠŠ rect_open æ”¹æˆ rect æˆ– rectangular å†è¯•
         "shape": ["rect_open"] * N_gates,
 
-        "g1": np.full(N_gates, channel_width),  # ¾ØĞÎ¿í
+        "g1": np.full(N_gates, channel_width),  # çŸ©å½¢å®½
         "g2": np.zeros(N_gates),
         "g3": np.zeros(N_gates),
         "g4": np.zeros(N_gates),
@@ -74,7 +74,7 @@ def build_chain_network(
         "C": np.zeros(N_gates)
     })
 
-    # 5×ùÕ¢£ºSJ(2k+1)->SJ(2k+2)
+    # 5åº§é—¸ï¼šSJ(2k+1)->SJ(2k+2)
     o_ids = np.arange(N_gates, dtype=int)
     orifices = pd.DataFrame({
         "id": o_ids,
@@ -96,13 +96,13 @@ def chainage_from_id(sj_id, reach_len=20_000.0):
 
 
 def main():
-    # ÌâÉè
+    # é¢˜è®¾
     N = 5
     dt = 30.0
     t_end = 6 * 3600.0
     times = np.arange(0, t_end + dt, dt)
 
-    # ½¨Ä£
+    # å»ºæ¨¡
     superjunctions, superlinks, orifices = build_chain_network(N_gates=N)
 
     model = SuperLink(
@@ -113,18 +113,18 @@ def main():
         orifices=orifices
     )
 
-    # ±ß½çÊäÈë
+    # è¾¹ç•Œè¾“å…¥
     n_sj = len(superjunctions)
     Q_in = pd.DataFrame(0.0, index=times, columns=np.arange(n_sj))
-    Q_in.iloc[:, 0] = 50.0  # ÉÏÓÎÁ÷Á¿±ß½ç
+    Q_in.iloc[:, 0] = 50.0  # ä¸Šæ¸¸æµé‡è¾¹ç•Œ
 
     H_bc = pd.DataFrame(np.nan, index=times, columns=np.arange(n_sj))
-    H_bc.iloc[:, -1] = 5.0  # ÏÂÓÎË®Î»±ß½ç£¨z=0, h=5£©
+    H_bc.iloc[:, -1] = 5.0  # ä¸‹æ¸¸æ°´ä½è¾¹ç•Œï¼ˆz=0, h=5ï¼‰
 
-    # Õ¢¿ª¶È£ºÎÈÌ¬ÑéÖ¤ÏÈºã¶¨
+    # é—¸å¼€åº¦ï¼šç¨³æ€éªŒè¯å…ˆæ’å®š
     u_o = np.full(N, 0.6, dtype=float)
 
-    # ·ÂÕæ²¢¼ÇÂ¼
+    # ä»¿çœŸå¹¶è®°å½•
     with Simulation(model, Q_in=Q_in, H_bc=H_bc) as sim:
         first = True
         while sim.t <= sim.t_end:
@@ -133,34 +133,33 @@ def main():
             sim.record_state()
             sim.print_progress()
 
-        # ÄãµÄ°æ±¾Àï H_j ÊÇ dict£¨ÄãÒÑÑéÖ¤£©
-        H_dict = sim.states.H_j
+    # Simulation.__exit__ already converts states to DataFrames with the
+    # superjunction names as columns, so access it directly instead of
+    # rebuilding from a raw dict (which lost the SJ* labels and caused the
+    # KeyError).
+    H_df = sim.states.H_j.sort_index()
 
-    # dict -> DataFrame£¨ĞĞ=¼ÇÂ¼²½£¬ÁĞ=superjunction id£©
-    H_df = pd.DataFrame(H_dict)
-
-    # ? ×Ô¼º¹¹ÔìÊ±¼äÖá£º³¤¶ÈÓÉ H_df ĞĞÊı¾ö¶¨
-    n_rec = len(H_df)
-    t_rec = np.arange(n_rec) * dt
+    # ç›´æ¥ç”¨è®°å½•çš„æ—¶é—´è½´ï¼Œä¿æŒä¸æ¨¡æ‹Ÿè¾“å‡ºä¸€è‡´
+    t_rec = H_df.index.astype(float)
     H_df.index = t_rec
 
-    # ÁĞÃûÓ³Éä³É SJ Ãû³Æ
+    # åˆ—åæ˜ å°„æˆ SJ åç§°
     id2name = superjunctions.set_index("id")["name"].to_dict()
     H_df = H_df.rename(columns=id2name)
 
-    # Í¼£ºË®Î»¹ı³Ì
+    # å›¾ï¼šæ°´ä½è¿‡ç¨‹
     plt.figure()
     for col in H_df.columns:
         plt.plot(H_df.index / 3600.0, H_df[col], label=col)
     plt.xlabel("Time (hr)")
     plt.ylabel("Head H_j (m)")
-    plt.title("Superjunction heads (´®Áª¶àÕ¢¸ÉÏß)")
+    plt.title("Superjunction heads (ä¸²è”å¤šé—¸å¹²çº¿)")
     plt.legend(ncol=2, fontsize=8)
     plt.grid(True)
     plt.tight_layout()
     plt.show()
 
-    # Ä©Ê±¿ÌË®ÃæÏß
+    # æœ«æ—¶åˆ»æ°´é¢çº¿
     H_last = H_df.iloc[-1]
     prof = superjunctions[["id", "name", "z_inv"]].copy()
     prof["x"] = prof["id"].apply(lambda k: chainage_from_id(int(k)))
@@ -171,7 +170,7 @@ def main():
     print("\n=== End-profile (last recorded timestep) ===")
     print(prof[["id", "name", "x", "z_inv", "H", "h"]].to_string(index=False))
 
-    # Õ¢Ç°ºóË®Í·²î
+    # é—¸å‰åæ°´å¤´å·®
     print("\nGate head differences (H_up - H_dn):")
     for k in range(N):
         sj_up = f"SJ{2*k+1}"
